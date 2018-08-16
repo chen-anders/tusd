@@ -137,6 +137,9 @@ type S3Store struct {
 	// MaxObjectSize is the maximum size an S3 Object can have according to S3
 	// API specifications. See link above.
 	MaxObjectSize int64
+	// ApplyMetadata specifies whether the tus metadata should be applied to the
+	// final S3 object
+	ApplyMetadata bool
 }
 
 type S3API interface {
@@ -190,11 +193,14 @@ func (store S3Store) NewUpload(info tusd.FileInfo) (id string, err error) {
 
 	// Convert meta data into a map of pointers for AWS Go SDK, sigh.
 	metadata := make(map[string]*string, len(info.MetaData))
-	for key, value := range info.MetaData {
-		// Copying the value is required in order to prevent it from being
-		// overwritten by the next iteration.
-		v := nonASCIIRegexp.ReplaceAllString(value, "?")
-		metadata[key] = &v
+
+	if store.ApplyMetadata {
+		for key, value := range info.MetaData {
+			// Copying the value is required in order to prevent it from being
+			// overwritten by the next iteration.
+			v := nonASCIIRegexp.ReplaceAllString(value, "?")
+			metadata[key] = &v
+		}
 	}
 
 	// Create the actual multipart upload
