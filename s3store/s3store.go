@@ -90,6 +90,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/tus/tusd"
 	"github.com/tus/tusd/uid"
@@ -260,54 +261,93 @@ func (store S3Store) WriteChunk(id string, offset int64, src io.Reader) (int64, 
 	numParts := len(parts)
 	nextPartNum := int64(numParts + 1)
 
+	var wg sync.WaitGroup
+	errChan := make(chan error)
+
 	for {
 		// Create a temporary file to store the part in it
 		file, err := ioutil.TempFile("", "tusd-s3-tmp-")
 		if err != nil {
+			finishWriteChunk(&wg, errChan, file)
 			return bytesUploaded, err
 		}
-		defer os.Remove(file.Name())
-		defer file.Close()
 
 		limitedReader := io.LimitReader(src, optimalPartSize)
 		n, err := io.Copy(file, limitedReader)
 		// io.Copy does not return io.EOF, so we not have to handle it differently.
 		if err != nil {
+			finishWriteChunk(&wg, errChan, file)
 			return bytesUploaded, err
 		}
 		// If io.Copy is finished reading, it will always return (0, nil).
 		if n == 0 {
-			return bytesUploaded, nil
+			return bytesUploaded, finishWriteChunk(&wg, errChan, file)
 		}
 
 		if !info.SizeIsDeferred {
 			if (size - offset) <= optimalPartSize {
 				if (size - offset) != n {
-					return bytesUploaded, nil
+					return bytesUploaded, finishWriteChunk(&wg, errChan, file)
 				}
 			} else if n < optimalPartSize {
-				return bytesUploaded, nil
+				return bytesUploaded, finishWriteChunk(&wg, errChan, file)
 			}
 		}
 
-		// Seek to the beginning of the file
-		file.Seek(0, 0)
+		wg.Add(1)
+		go func(file *os.File, partNum int64) {
+			defer func() {
+				wg.Done()
+				os.Remove(file.Name())
+				file.Close()
+			}()
 
-		_, err = store.Service.UploadPart(&s3.UploadPartInput{
-			Bucket:     aws.String(store.Bucket),
-			Key:        store.pathInBucket(uploadId),
-			UploadId:   aws.String(multipartId),
-			PartNumber: aws.Int64(nextPartNum),
-			Body:       file,
-		})
-		if err != nil {
-			return bytesUploaded, err
-		}
+			file.Seek(0, 0)
+
+			startTime := time.Now()
+			_, err := store.Service.UploadPart(&s3.UploadPartInput{
+				Bucket:     aws.String(store.Bucket),
+				Key:        store.pathInBucket(uploadId),
+				UploadId:   aws.String(multipartId),
+				PartNumber: aws.Int64(partNum),
+				Body:       file,
+			})
+			endTime := time.Since(startTime)
+
+			fmt.Printf("Part upload took %d ms\n", endTime/1e6)
+
+			if err != nil {
+				fmt.Printf("Error uploading part: %v\n", err.Error())
+				errChan <- err
+				return
+			}
+		}(file, nextPartNum)
 
 		offset += n
 		bytesUploaded += n
 		nextPartNum += 1
 	}
+}
+
+func finishWriteChunk(wg *sync.WaitGroup, errChan chan error, lastFile *os.File) error {
+	var err error
+
+	os.Remove(lastFile.Name())
+
+	fmt.Println("Waiting for buffers")
+	wg.Wait()
+	fmt.Println("Done")
+
+	select {
+	case e := <-errChan:
+		err = e
+	default:
+		// There was no error
+	}
+
+	close(errChan)
+
+	return err
 }
 
 func (store S3Store) GetInfo(id string) (info tusd.FileInfo, err error) {
