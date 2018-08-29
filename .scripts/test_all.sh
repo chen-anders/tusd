@@ -24,10 +24,6 @@ if [[ "$goversion" == *"go1.5"* ]] ||
 else
   # Install the Consul packages which are not vendored.
   go get -u github.com/hashicorp/consul/...
-
-  # Install the etcd packages which are not vendored.
-  go get -u github.com/etcd-io/etcd
-  go get -u github.com/mwitkow/go-etcd-harness
 fi
 
 # Install the AWS SDK and Prometheus client which is explicitly not vendored
