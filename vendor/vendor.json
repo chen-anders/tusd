@@ -75,6 +75,18 @@
 			"revisionTime": "2017-08-15T01:04:13Z"
 		},
 		{
+			"checksumSHA1": "gaFSpnTfpzHquQKo9HMt3aT7u44=",
+			"path": "github.com/coreos/etcd",
+			"revision": "fca8add78a9d926166eb739b8e4a124434025ba3",
+			"revisionTime": "2018-07-24T16:48:32Z"
+		},
+		{
+			"checksumSHA1": "Ev4TWWtADVfddnn/RFjhqHE01FM=",
+			"path": "github.com/coreos/go-semver",
+			"revision": "e214231b295a8ea9479f11b70b35d5acf3556d9b",
+			"revisionTime": "2018-01-08T23:09:05Z"
+		},
+		{
 			"checksumSHA1": "mrz/kicZiUaHxkyfvC/DyQcr8Do=",
 			"path": "github.com/davecgh/go-spew/spew",
 			"revision": "ecdeabc65495df2dec95d7c4a4c3e021903035e5",
@@ -153,6 +165,12 @@
 			"revisionTime": "2017-09-15T02:47:31Z"
 		},
 		{
+			"checksumSHA1": "suSLzwXJd+8Au2bl/kiinA4PpMI=",
+			"path": "github.com/mwitkow/go-etcd-harness",
+			"revision": "4dc1cb3e1ff9e2edb0241bb0a7e78aa63db35a07",
+			"revisionTime": "2016-03-25T21:29:26Z"
+		},
+		{
 			"checksumSHA1": "LuFv4/jlrmFNnDb/5SCSEPAM9vU=",
 			"path": "github.com/pmezard/go-difflib/difflib",
 			"revision": "792786c7400a136282c1664665ae0a8db921c6c2",
@@ -169,6 +187,12 @@
 			"path": "github.com/stretchr/testify/assert",
 			"revision": "2aa2c176b9dab406a6970f6a55f513e8a8c8b18f",
 			"revisionTime": "2017-08-14T20:04:35Z"
+		},
+		{
+			"checksumSHA1": "s/kG3fL3C8puCzkyfmOgwC9gWUY=",
+			"path": "github.com/ugorji/go/codec",
+			"revision": "aa28833c9f9fa49a39beb6969d0651ef6e488290",
+			"revisionTime": "2018-08-29T16:56:55Z"
 		},
 		{
 			"checksumSHA1": "jAZlYPYAvoSIIuf7enId5qpQXVs=",
