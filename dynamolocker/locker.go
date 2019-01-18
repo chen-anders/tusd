@@ -23,12 +23,12 @@ import (
 	"sync"
 	"time"
 
-	"cirello.io/dynamolock"
+	"github.com/ucirello/dynamolock"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/tus/tusd"
 )
 
-const DEFAULT_LEASE_DURATION_MILLISECONDS = int64(3000)
+const DEFAULT_LEASE_DURATION_MILLISECONDS = int64(10000)
 
 var (
 	ErrLockNotHeld = errors.New("Lock not held")
@@ -57,7 +57,7 @@ func NewWithLeaseDuration(client *dynamodb.DynamoDB, tableName string, leaseDura
 		client,
 		tableName,
 		dynamolock.WithLeaseDuration(time.Duration(leaseDuration)*time.Millisecond),
-		dynamolock.WithHeartbeatPeriod(time.Duration(leaseDuration/3)*time.Millisecond),
+		dynamolock.WithHeartbeatPeriod(time.Duration(leaseDuration/5)*time.Millisecond),
 	)
 
 	if err != nil {
